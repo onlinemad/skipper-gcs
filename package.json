@@ -1,0 +1,34 @@
+{
+  "name": "skipper-gcs",
+  "version": "0.1.0",
+  "description": "A skipper adapter to allow uploading files to Google Cloud Storage",
+  "main": "index.js",
+  "scripts": {
+    "test": "node -e \"require('skipper-adapter-tests')({module: require('./'));\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/onlinemad/skipper-gcs.git"
+  },
+  "keywords": [
+    "skipper",
+    "google",
+    "skipper-gcs",
+    "gcs",
+    "upload"
+  ],
+  "author": "Ian Wu <onlinemad@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/onlinemad/skipper-gcs.git/issues"
+  },
+  "homepage": "https://github.com/onlinemad/skipper-gcs.git",
+  "devDependencies": {
+    "skipper-adapter-tests": "~1.5.2"
+  },
+  "dependencies": {
+    "google-oauth-jwt": "^0.1.4",
+    "lodash": "^2.4.1",
+    "request": "^2.40.0"
+  }
+}
