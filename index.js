@@ -54,7 +54,7 @@ module.exports = function GCSStore(globalOpts) {
               receiver__.emit('error', err);
             } else {
               // console.log('upload response body: ', body);
-              __newFile.extra = body;
+              __newFile.extra = JSON.parse(body);
               if (options.publicly) {
                 request.post({
                   url: 'https://www.googleapis.com/storage/v1/b/' + options.bucket + '/o/' + encodeURIComponent(filepath) + '/acl',
