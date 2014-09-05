@@ -42,9 +42,7 @@ module.exports = function GCSStore(globalOpts) {
       receiver__._write = function onFile(__newFile, encoding, done) {
         tokens.get({ email: options.email, keyFile: options.keyFile, scopes: options.scopes }, function(err, token) {
           // console.log('oauth token: ', token);
-          var filename = typeof options.filename === 'undefined' ? __newFile.fd : options.filename + '.' + __newFile.filename.split('.').pop();
-          var filepath = typeof options.path === 'undefined' ? filename : options.path + '/' + filename;
-          var url = 'https://www.googleapis.com/upload/storage/v1/b/' + options.bucket + '/o?uploadType=media&name=' + encodeURIComponent(filepath);
+          var url = 'https://www.googleapis.com/upload/storage/v1/b/' + options.bucket + '/o?uploadType=media&name=' + encodeURIComponent(__newFile.fd);
           // console.log('file post url: ', url);
           __newFile.pipe(request.post({
             url: url,
@@ -57,7 +55,7 @@ module.exports = function GCSStore(globalOpts) {
               __newFile.extra = JSON.parse(body);
               if (options.publicly) {
                 request.post({
-                  url: 'https://www.googleapis.com/storage/v1/b/' + options.bucket + '/o/' + encodeURIComponent(filepath) + '/acl',
+                  url: 'https://www.googleapis.com/storage/v1/b/' + options.bucket + '/o/' + encodeURIComponent(__newFile.fd) + '/acl',
                   headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, 'x-goog-api-version': 2 },
                   json: { 'entity': 'allUsers', 'role': 'READER' }
                 }, function(err, res, body) {
