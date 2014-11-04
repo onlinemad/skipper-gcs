@@ -1,11 +1,13 @@
 /**
  * Module dependencies
  */
+var debug = require('debug')('skipper-gcs');
+var qs = require('querystring');
 var Writable = require('stream').Writable;
 var _ = require('lodash');
-var TokenCache = require('google-oauth-jwt').TokenCache;
 var request = require('request');
-var tokens = new TokenCache();
+var token = require('./standalone/token');
+
 /**
  * skipper-gcs
  *
@@ -40,37 +42,47 @@ module.exports = function GCSStore(globalOpts) {
       // from the Readable stream (Upstream) which is pumping filestreams
       // into this receiver.  (filename === `__newFile.filename`).
       receiver__._write = function onFile(__newFile, encoding, done) {
-        tokens.get({ email: options.email, keyFile: options.keyFile, scopes: options.scopes }, function(err, token) {
-          // console.log('oauth token: ', token);
-          var url = 'https://www.googleapis.com/upload/storage/v1/b/' + options.bucket + '/o?uploadType=media&name=' + encodeURIComponent(__newFile.fd);
-          // console.log('file post url: ', url);
-          __newFile.pipe(request.post({
-            url: url,
-            headers: { Authorization: 'Bearer ' + token, 'x-goog-api-version': 2 }
-          }, function(err, res, body) {
-            if (err) {
-              receiver__.emit('error', err);
-            } else {
-              // console.log('upload response body: ', body);
-              __newFile.extra = JSON.parse(body);
-              if (options.publicly) {
-                request.post({
-                  url: 'https://www.googleapis.com/storage/v1/b/' + options.bucket + '/o/' + encodeURIComponent(__newFile.fd) + '/acl',
-                  headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, 'x-goog-api-version': 2 },
-                  json: { 'entity': 'allUsers', 'role': 'READER' }
-                }, function(err, res, body) {
-                  if (err) {
-                    receiver__.emit('error', err);
-                  } else {
-                    // console.log('acl response body: ', body);
-                    done();
-                  }
-                });
+        token.cache({ email: options.email, keyFile: options.keyFile, scopes: options.scopes }, function(err, token) {
+          if (err) {
+            // console.log('request token error' + err);
+            receiver__.emit('error', err);
+          } else {
+            debug('token object', token);
+            var metadata = { name: __newFile.fd };
+            _.defaults(metadata, options.metadata);
+            debug('metadata object', metadata);
+            var querystring = { uploadType: 'multipart' };
+            _.defaults(querystring, options.querystring);
+            var url = 'https://www.googleapis.com/upload/storage/v1/b/' + options.bucket + '/o?' + qs.stringify(querystring);
+            debug('url', url);
+            request.post({
+              preambleCRLF: true,
+              postambleCRLF: true,
+              url: url,
+              multipart: [
+                { 'Content-Type':'application/json', body: JSON.stringify(metadata) },
+                { body: __newFile }
+              ],
+              headers: { Authorization: 'Bearer ' + token.access_token }
+            }, function(err, res, body) {
+              if (err) {
+                // console.log('connect error.', err);
+                receiver__.emit('error', err);
               } else {
-                done();
+                debug('upload response');
+                debug('http status', res.statusCode);
+                debug('body', body);
+                var extra = JSON.parse(body);
+                if(extra.error) {
+                  // console.log('file upload error.', err);
+                  receiver__.emit('error', extra.error);
+                } else {
+                  __newFile.extra = JSON.parse(body);
+                  done();
+                }
               }
-            }
-          }));
+            });
+          }
         });
       }
       return receiver__;

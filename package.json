@@ -4,7 +4,7 @@
   "description": "A skipper adapter to allow uploading files to Google Cloud Storage",
   "main": "index.js",
   "scripts": {
-    "test": "node -e \"require('skipper-adapter-tests')({module: require('./'));\""
+    "test": "node -e \"require('skipper-adapter-tests')({mocha: { timeout: 360000 }, module: require('./'), bucket:process.env.BUCKET || 'skipper-adapter-tests', keyFile: process.env.KEYFILE, email: process.env.EMAIL});\""
   },
   "repository": {
     "type": "git",
@@ -27,8 +27,9 @@
     "skipper-adapter-tests": "~1.5.2"
   },
   "dependencies": {
-    "google-oauth-jwt": "^0.1.4",
+    "debug": "^2.1.0",
+    "jsonwebtoken": "^1.1.2",
     "lodash": "^2.4.1",
-    "request": "^2.40.0"
+    "request": "^2.47.0"
   }
 }
