@@ -7,6 +7,8 @@ var Writable = require('stream').Writable;
 var _ = require('lodash');
 var request = require('request');
 var token = require('./standalone/token');
+var gcloud = require('gcloud');
+var concat = require('concat-stream');
 
 /**
  * skipper-gcs
@@ -22,9 +24,36 @@ module.exports = function GCSStore(globalOpts) {
     bucket: '',
     scopes: ['https://www.googleapis.com/auth/devstorage.full_control']
   });
+  var gcs = gcloud.storage({
+    projectId: globalOpts.projectId,
+    keyFilename: globalOpts.keyFilename
+  });
+  var bucket = gcs.bucket(globalOpts.bucket);
+
   var adapter = {
-    ls: function(dirname, cb) { return cb(new Error('TODO')); },
-    read: function(fd, cb) { return cb(new Error('TODO')); },
+    ls: function(dirname, cb) {
+      // console.log(dirname);
+      bucket.getFiles({ prefix: dirname}, function(err, files) {
+        if (err) {
+          cb(err)
+        } else {
+          // console.log(files);
+          files = _.pluck(files, 'name');
+          // console.log(files);
+          cb(null, files);
+        }
+      });
+      // return cb(new Error('TODO'));
+    },
+    read: function(fd, cb) {
+      var remoteReadStream = bucket.file(fd).createReadStream();
+      remoteReadStream.pipe(concat(function (data) {
+          // if (firedCb) return;
+          // firedCb = true;
+          cb(null, data);
+        }));
+      // return cb(new Error('TODO'));
+    },
     rm: function(fd, cb) { return cb(new Error('TODO')); },
     /**
      * A simple receiver for Skipper that writes Upstreams to Google Cloud Storage
