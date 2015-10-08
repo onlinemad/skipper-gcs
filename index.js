@@ -84,6 +84,8 @@ module.exports = function GCSStore(globalOpts) {
         })
         stream.on('finish', function() {
           __newFile.extra = file.metadata;
+          __newFile.extra.Location = 'https://storage.googleapis.com/' + globalOpts.bucket + '/' + __newFile.fd;
+          if(globalOpts.public) file.makePublic();
           done();
         });
         __newFile.pipe(stream);
