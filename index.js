@@ -32,27 +32,30 @@ module.exports = function GCSStore(globalOpts) {
 
   var adapter = {
     ls: function(dirname, cb) {
-      // console.log(dirname);
-      bucket.getFiles({ prefix: dirname}, function(err, files) {
+      bucket.getFiles({ prefix: dirname }, function(err, files) {
         if (err) {
           cb(err)
         } else {
-          // console.log(files);
           files = _.pluck(files, 'name');
-          // console.log(files);
           cb(null, files);
         }
       });
-      // return cb(new Error('TODO'));
     },
     read: function(fd, cb) {
       var remoteReadStream = bucket.file(fd).createReadStream();
-      remoteReadStream.pipe(concat(function (data) {
-          // if (firedCb) return;
-          // firedCb = true;
+      remoteReadStream
+        .on('error', function(err) {
+          cb(err);
+        })
+        .on('response', function(response) {
+          // Server connected and responded with the specified status and headers.
+        })
+        .on('end', function() {
+          // The file is fully downloaded.
+        })
+        .pipe(concat(function(data) {
           cb(null, data);
         }));
-      // return cb(new Error('TODO'));
     },
     rm: function(fd, cb) { return cb(new Error('TODO')); },
     /**
@@ -89,48 +92,6 @@ module.exports = function GCSStore(globalOpts) {
           done();
         });
         __newFile.pipe(stream);
-        // token.cache({ email: options.email, keyFile: options.keyFile, scopes: options.scopes }, function(err, token) {
-        //   if (err) {
-        //     // console.log('request token error' + err);
-        //     receiver__.emit('error', err);
-        //   } else {
-        //     debug('token object', token);
-        //     var metadata = { name: __newFile.fd };
-        //     _.defaults(metadata, options.metadata);
-        //     debug('metadata object', metadata);
-        //     var querystring = { uploadType: 'multipart' };
-        //     _.defaults(querystring, options.querystring);
-        //     var url = 'https://www.googleapis.com/upload/storage/v1/b/' + options.bucket + '/o?' + qs.stringify(querystring);
-        //     debug('url', url);
-        //     request.post({
-        //       preambleCRLF: true,
-        //       postambleCRLF: true,
-        //       url: url,
-        //       multipart: [
-        //         { 'Content-Type':'application/json', body: JSON.stringify(metadata) },
-        //         { body: __newFile }
-        //       ],
-        //       headers: { Authorization: 'Bearer ' + token.access_token }
-        //     }, function(err, res, body) {
-        //       if (err) {
-        //         console.log('connect error.', err);
-        //         receiver__.emit('error', err);
-        //       } else {
-        //         debug('upload response');
-        //         debug('http status', res.statusCode);
-        //         debug('body', body);
-        //         var extra = JSON.parse(body);
-        //         if(extra.error) {
-        //           console.log('file upload error.', err);
-        //           receiver__.emit('error', extra.error);
-        //         } else {
-        //           __newFile.extra = JSON.parse(body);
-        //           done();
-        //         }
-        //       }
-        //     });
-        //   }
-        // });
       }
       return receiver__;
     }
