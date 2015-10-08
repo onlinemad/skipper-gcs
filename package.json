@@ -24,16 +24,13 @@
   },
   "homepage": "https://github.com/onlinemad/skipper-gcs.git",
   "devDependencies": {
-    "skipper-adapter-tests": "~1.5.2"
+    "skipper-adapter-tests": "~1.5.3"
   },
   "dependencies": {
     "concat-stream": "^1.5.0",
     "debug": "^2.1.0",
     "gcloud": "^0.23.0",
-    "jsonwebtoken": "^1.1.2",
-    "lodash": "^2.4.1",
-    "mime": "^1.3.4",
-    "request": "^2.47.0",
-    "skipper-adapter-tests": "^1.5.3"
+    "lodash": "^3.10.1",
+    "mime": "^1.3.4"
   }
 }
