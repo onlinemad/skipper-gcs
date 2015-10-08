@@ -1,6 +1,6 @@
 {
   "name": "skipper-gcs",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A skipper adapter to allow uploading files to Google Cloud Storage",
   "main": "index.js",
   "scripts": {
